@@ -10,13 +10,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: git checkout
+      - name: 🕵 Running git checkout
         uses: actions/checkout@v2
 
-      - name: Install Ruby
+      - name: 💎 Install Ruby && running bundler
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
 
-      - run: bundle exec rspec
-
+      - name: 👩🔬 Run test suite
+        run: bundle exec rspec
