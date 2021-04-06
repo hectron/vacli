@@ -1,5 +1,6 @@
 require "spec_helper"
-require_relative "../vacli"
+require_relative "../vaccine_spotter"
+require_relative "../vacli" # constants
 
 describe VaccineSpotter do
   CURRENT_PATH = File.expand_path(File.dirname(__FILE__)).freeze
