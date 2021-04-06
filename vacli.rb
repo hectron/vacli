@@ -11,26 +11,28 @@ PFIZER = "pfizer".freeze
 JJ = "jj".freeze
 MANUFACTURERS = [MODERNA, PFIZER, JJ].freeze
 
-options = {}
-parser = OptionParser.new
-parser.banner = "Usage: #{parser.program_name} [options]"
-parser.release = "alpha"
-parser.version = "0.0.1"
-parser.program_name = "vacli.rb"
+if $PROGRAM_NAME == __FILE__
+  options = {}
+  parser = OptionParser.new
+  parser.banner = "Usage: #{parser.program_name} [options]"
+  parser.release = "alpha"
+  parser.version = "0.0.1"
+  parser.program_name = "vacli.rb"
 
-parser.on("-sSTATE", "--state=STATE", STATES, "USPS-abbreviated United States state to check.") do |state|
-  options[:state] = state
-end
+  parser.on("-sSTATE", "--state=STATE", STATES, "USPS-abbreviated United States state to check.") do |state|
+    options[:state] = state
+  end
 
-parser.on("-m", "--manufacturer MANUFACTURER", MANUFACTURERS, "Vaccination manufacturer.", "Options: #{MANUFACTURERS.inspect}") do |manufacturer|
-  options[:manufacturer] = manufacturer
-end
+  parser.on("-m", "--manufacturer MANUFACTURER", MANUFACTURERS, "Vaccination manufacturer.", "Options: #{MANUFACTURERS.inspect}") do |manufacturer|
+    options[:manufacturer] = manufacturer
+  end
 
-parser.parse!(into: options)
+  parser.parse!(into: options)
 
-if options.keys.none?
-  puts parser.to_s
-  exit
+  if options.keys.none?
+    puts parser.to_s
+    exit
+  end
 end
 
 class VaccineSpotter
@@ -69,5 +71,3 @@ class VaccineSpotter
     end
   end
 end
-
-VaccineSpotter.find_in(options[:state], vaccine_type: options[:manufacturer])
