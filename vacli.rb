@@ -38,6 +38,6 @@ if $PROGRAM_NAME == __FILE__
   end
 
   require_relative "./vaccine_spotter"
-  VaccineSpotter.find_in(options[:state], vaccine_type: options[:manufacturer])
+  VaccineSpotter.find_in(options[:state], vaccine_type: options[:manufacturer], zipcodes: options[:zipcodes])
 end
 
