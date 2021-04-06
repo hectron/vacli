@@ -4,8 +4,8 @@ require "optparse"
 
 $stdout.sync = true
 
-API_URL = "https://www.vaccinespotter.org/api/v0/states".freeze
 STATES = ["AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
+
 MODERNA = "moderna".freeze
 PFIZER = "pfizer".freeze
 JJ = "jj".freeze
@@ -33,31 +33,41 @@ if options.keys.none?
   exit
 end
 
-uri = URI("#{API_URL}/#{options[:state]}.json")
-data = JSON.parse(Net::HTTP.get(uri))
+class VaccineSpotter
+  API_URL = "https://www.vaccinespotter.org/api/v0/states".freeze
 
-# find appointments
-data["features"].each do |feature|
-  properties = feature.dig("properties")
-  next unless properties["appointments_available"]
-
-  # TODO come up with a geofiltering system
-  # TODO filter by vaccine type
-  # TODO daemon
-
-  next if options[:manufacturer] && !properties["appointment_vaccine_types"][options[:manufacturer]]
-
-
-  relevant_appointments = properties["appointments"].reject do |appointment|
-    options[:manufacturer] && !appointment["vaccine_types"].include?(options[:manufacturer])
+  def self.find_in(state, vaccine_type:)
+    new(state, vaccine_type).find
   end
 
-  if relevant_appointments.any?
-    puts <<~MSG.split.join(" ")
+  def initialize(state, vaccine_type)
+    @state = state
+    @vaccine_type = vaccine_type
+  end
+
+  def find
+    uri = URI("#{API_URL}/#{@state}.json")
+    data = JSON.parse(Net::HTTP.get(uri))
+
+    # find appointments
+    data["features"].each do |feature|
+      properties = feature.dig("properties")
+      next if properties["appointments_available"] != true
+      next if @manufacturer && !properties["appointment_vaccine_types"][@manufacturer]
+
+      relevant_appointments = properties["appointments"].reject do |appointment|
+        @manufacturer && !appointment["vaccine_types"].include?(@manufacturer)
+      end
+
+      if relevant_appointments.any?
+        puts <<~MSG.split.join(" ")
       Found #{relevant_appointments.size} appointment(s) for the #{relevant_appointments.flat_map{|a| a["vaccine_types"]}.uniq.join(" and ")} vaccine
       at #{properties["provider"]} #{properties["name"]} - #{properties["city"]}, #{properties["state"]} #{properties["postal_code"]}
-    MSG
-    puts "Appointment URL: #{properties["url"]}\n\n"
+        MSG
+        puts "Appointment URL: #{properties["url"]}\n\n"
+      end
+    end
   end
 end
 
+VaccineSpotter.find_in(options[:state], vaccine_type: options[:manufacturer])
