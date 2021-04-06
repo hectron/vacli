@@ -4,13 +4,14 @@ require "net/http"
 class VaccineSpotter
   API_URL = "https://www.vaccinespotter.org/api/v0/states".freeze
 
-  def self.find_in(state, vaccine_type:)
-    new(state, vaccine_type).find
+  def self.find_in(state, vaccine_type: nil, zipcodes: [])
+    new(state, vaccine_type, zipcodes).find
   end
 
-  def initialize(state, vaccine_type)
+  def initialize(state, vaccine_type, zipcodes)
     @state = state
     @vaccine_type = vaccine_type
+    @zipcodes = zipcodes
   end
 
   def find
@@ -21,6 +22,7 @@ class VaccineSpotter
       properties = feature.dig("properties")
       next unless properties["appointments_available"]
       next if @vaccine_type && !properties["appointment_vaccine_types"][@vaccine_type]
+      next if @zipcodes.any? && !@zipcodes.include?(properties["postal_code"])
 
       relevant_appointments = properties["appointments"].reject do |appointment|
         next true unless appointment.has_key?("vaccine_types")

@@ -10,6 +10,7 @@ JJ = "jj".freeze
 MANUFACTURERS = [MODERNA, PFIZER, JJ].freeze
 
 if $PROGRAM_NAME == __FILE__
+  # default options
   options = {}
   parser = OptionParser.new
   parser.banner = "Usage: #{parser.program_name} [options]"
@@ -23,6 +24,10 @@ if $PROGRAM_NAME == __FILE__
 
   parser.on("-m", "--manufacturer MANUFACTURER", MANUFACTURERS, "Vaccination manufacturer.", "Options: #{MANUFACTURERS.inspect}") do |manufacturer|
     options[:manufacturer] = manufacturer
+  end
+
+  parser.on("-z", "--zipcodes ZIPCODE,ZIPCODE,ZIPCODE", Array, "Comma-separated (without space inbetween) zip codes to filter by.") do |zipcodes|
+    options[:zipcodes] = zipcodes
   end
 
   parser.parse!(into: options)
