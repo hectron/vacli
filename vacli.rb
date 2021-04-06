@@ -5,7 +5,11 @@ require "optparse"
 $stdout.sync = true
 
 API_URL = "https://www.vaccinespotter.org/api/v0/states".freeze
-STATES = ["AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NB *↵*to NE in 1969", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
+STATES = ["AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
+MODERNA = "moderna".freeze
+PFIZER = "pfizer".freeze
+JJ = "jj".freeze
+MANUFACTURERS = [MODERNA, PFIZER, JJ].freeze
 
 options = {}
 parser = OptionParser.new
@@ -14,24 +18,12 @@ parser.release = "alpha"
 parser.version = "0.0.1"
 parser.program_name = "vacli.rb"
 
-parser.on("-sSTATE", "--state=STATE", "USPS-abbreviated United States state to check") do |state|
-  upcased_state = state&.upcase
-  not_found = -> { raise "State #{state.inspect} not found" }
-  STATES.find(not_found) { |us_state| state == us_state }
+parser.on("-sSTATE", "--state=STATE", STATES, "USPS-abbreviated United States state to check.") do |state|
   options[:state] = state
 end
 
-parser.on("-m", "--manufacturer MANUFACTURER", String, "Vaccination manufacturer. Options: moderna, pfizer, jj") do |manufacturer|
-  options[:manufacturer] = case manufacturer&.downcase
-                           when "moderna"
-                             "moderna"
-                           when "pfizer"
-                             "pfizer"
-                           when "jj"
-                             "johnson&johnson"
-                           else
-                             nil
-                           end
+parser.on("-m", "--manufacturer MANUFACTURER", MANUFACTURERS, "Vaccination manufacturer.", "Options: #{MANUFACTURERS.inspect}") do |manufacturer|
+  options[:manufacturer] = manufacturer
 end
 
 parser.parse!(into: options)
