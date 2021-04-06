@@ -17,5 +17,13 @@ describe VaccineSpotter do
 
       VaccineSpotter.find_in("IL", vaccine_type: nil)
     end
+
+    MANUFACTURERS.each do |manufacturer|
+      it "returns appointments for #{manufacturer}" do
+        appointments = VaccineSpotter.find_in("IL", vaccine_type: manufacturer)
+
+        expect(appointments.flat_map { |a| a["vaccine_types"] }.uniq).to include(manufacturer)
+      end
+    end
   end
 end

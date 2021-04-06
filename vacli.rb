@@ -51,17 +51,19 @@ class VaccineSpotter
     uri = URI("#{API_URL}/#{@state}.json")
     data = JSON.parse(Net::HTTP.get(uri))
 
-    # find appointments
-    data["features"].each do |feature|
+    data["features"].each_with_object([]) do |feature, appointments|
       properties = feature.dig("properties")
-      next if properties["appointments_available"] != true
-      next if @manufacturer && !properties["appointment_vaccine_types"][@manufacturer]
+      next unless properties["appointments_available"]
+      next if @vaccine_type && !properties["appointment_vaccine_types"][@vaccine_type]
 
       relevant_appointments = properties["appointments"].reject do |appointment|
-        @manufacturer && !appointment["vaccine_types"].include?(@manufacturer)
+        next true unless appointment.has_key?("vaccine_types")
+        @vaccine_type && !appointment["vaccine_types"].include?(@vaccine_type)
       end
 
       if relevant_appointments.any?
+        appointments.concat(relevant_appointments)
+
         puts <<~MSG.split.join(" ")
       Found #{relevant_appointments.size} appointment(s) for the #{relevant_appointments.flat_map{|a| a["vaccine_types"]}.uniq.join(" and ")} vaccine
       at #{properties["provider"]} #{properties["name"]} - #{properties["city"]}, #{properties["state"]} #{properties["postal_code"]}
