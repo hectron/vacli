@@ -15,11 +15,23 @@ parser.version = "0.0.1"
 parser.program_name = "vacli.rb"
 
 parser.on("-sSTATE", "--state=STATE", "USPS-abbreviated United States state to check") do |state|
-	upcased_state = state&.upcase
+  upcased_state = state&.upcase
+  not_found = -> { raise "State #{state.inspect} not found" }
+  STATES.find(not_found) { |us_state| state == us_state }
+  options[:state] = state
+end
 
-	not_found = -> { raise "State #{state.inspect} not found" }
-	STATES.find(not_found) { |us_state| state == us_state }
-	options[:state] = state
+parser.on("-m", "--manufacturer MANUFACTURER", String, "Vaccination manufacturer. Options: moderna, pfizer, jj") do |manufacturer|
+  options[:manufacturer] = case manufacturer&.downcase
+                           when "moderna"
+                             "moderna"
+                           when "pfizer"
+                             "pfizer"
+                           when "jj"
+                             "johnson&johnson"
+                           else
+                             nil
+                           end
 end
 
 parser.parse!(into: options)
@@ -41,13 +53,19 @@ data["features"].each do |feature|
   # TODO filter by vaccine type
   # TODO daemon
 
-  puts "Found vaccine appointments at #{properties["provider"]} #{properties["name"]} - #{properties["city"]}, #{properties["state"]} #{properties["postal_code"]}"
-  puts "Appointment URL: #{properties["url"]}"
-  vaccines_by_type = properties["appointments"].group_by { |apt| apt["type"] }
+  next if options[:manufacturer] && !properties["appointment_vaccine_types"][options[:manufacturer]]
 
-  vaccines_by_type.each do |type, appointments|
-    puts "#{appointments.size} appointment(s) for the #{type} vaccine"
+
+  relevant_appointments = properties["appointments"].reject do |appointment|
+    options[:manufacturer] && !appointment["vaccine_types"].include?(options[:manufacturer])
   end
 
-  puts "\n"
+  if relevant_appointments.any?
+    puts <<~MSG.split.join(" ")
+      Found #{relevant_appointments.size} appointment(s) for the #{relevant_appointments.flat_map{|a| a["vaccine_types"]}.uniq.join(" and ")} vaccine
+      at #{properties["provider"]} #{properties["name"]} - #{properties["city"]}, #{properties["state"]} #{properties["postal_code"]}
+    MSG
+    puts "Appointment URL: #{properties["url"]}\n\n"
+  end
 end
+
