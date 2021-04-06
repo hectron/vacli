@@ -26,5 +26,15 @@ describe VaccineSpotter do
         expect(appointments.flat_map { |a| a["vaccine_types"] }.uniq).to include(manufacturer)
       end
     end
+
+    it "filters the results by zipcode" do
+      appointments = VaccineSpotter.find_in("IL", zipcodes: ["60601"])
+
+      expect(appointments).to be_empty
+
+      appointments = VaccineSpotter.find_in("IL", zipcodes: ["60453"])
+
+      expect(appointments).not_to be_empty
+    end
   end
 end
